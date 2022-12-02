@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react';
 import './App.css';
 
 function App() {
+  
 const [data, setData] = useState([]);
 
   const apiGet = () => {
@@ -16,26 +17,29 @@ const [data, setData] = useState([]);
   .then((json) => {
     console.log(json)
     setData(json.result);
+    
     });
 };
-  //データに入ってるか確認してHTML書き直す
+
 useEffect(() => {
   apiGet()
 
 }, []);
 
-
-
   return (
 
     <div className="App">
-      <div>
+      
         {data.map((item: any) => (
-          <li key={item.prefCode}>{item.prefName}</li>
+          <div key={item.prefCode}>
+          <input type="checkbox" name={item.prefName}/>
+          <label>{item.prefName}</label>
+          </div>
         ))}
-      </div>
+      
     </div>
   );
 }
+
 
 export default App;
