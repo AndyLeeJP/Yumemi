@@ -1,24 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
+import {useEffect, useState} from 'react';
 import './App.css';
 
 function App() {
+const [data, setData] = useState([]);
+
+  const apiGet = () => {
+  fetch("https://opendata.resas-portal.go.jp/api/v1/prefectures",{
+    method: 'GET',
+    headers: {
+      'X-API-KEY':'ex7wsKgup5vnO3VgsT3htKKSfNRQlrNkxPCrdzhB',
+      'Content-Type':'application/json;charset=UTF-8'
+    }
+  })
+  .then((response) => response.json())
+  .then((json) => {
+    console.log(json)
+    setData(json.result);
+    });
+};
+  //データに入ってるか確認してHTML書き直す
+useEffect(() => {
+  apiGet()
+
+}, []);
+
+
+
   return (
+
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div>
+        {data.map((item: any) => (
+          <li key={item.prefCode}>{item.prefName}</li>
+        ))}
+      </div>
     </div>
   );
 }
