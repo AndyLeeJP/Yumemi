@@ -5,9 +5,8 @@ import HighchartsReact from "highcharts-react-official";
 
 function App() {
   const [data, setData] = useState([]);
-  const [data2, setData2] = useState([]);
-  const [val, setVal] = useState(["選択値"]);
-  const [save, setSave] = useState<any>([]);
+  const [select, setSelect] = useState(["選択値"]);
+  const [dataBoxes, setDataBoxes] = useState<any>([]);
   const [opt, setOptions] = useState<Highcharts.Options>({
     title: {
       text: "人口増加率",
@@ -39,7 +38,6 @@ function App() {
     },
     series: [],
   });
-  // const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
 
   const getApi = () => {
     fetch("https://opendata.resas-portal.go.jp/api/v1/prefectures", {
@@ -60,35 +58,43 @@ function App() {
     getApi();
   }, []);
 
+  useEffect(() => {
+    setOptions((prevState) => ({
+      ...prevState,
+      series: dataBoxes,
+    }));
+  }, [dataBoxes]);
+
   const handleChange = (e: any) => {
-    // change したのはいいとして、ON なのか OFF なのか判定する必要がある
-    if (val.includes(e.target.value)) {
-      return setVal(val.filter((item) => item !== e.target.value));
+    if (select.includes(e.target.value)) {
+      const result = dataBoxes.filter(
+        (dataBoxes: any) => dataBoxes.name !== e.target.id
+      );
+      setDataBoxes(result);
+      console.log(result);
+
+      return setSelect(select.filter((item) => item !== e.target.value));
     } else {
       console.log(e.target.value);
-      // そうでなければ ON と判断し、
-      // イベント発行元を末尾に加えた配列を set し直す
-      setVal([...val, e.target.value]);
-      // state は直接は編集できない
-      console.log(e.target.id);
-      // つまり val.push(e.target.value) はNG ❌
-      // すでに含まれていれば OFF したと判断し、
-      // イベント発行元を除いた配列を set し直す
+
+      setSelect([...select, e.target.value]);
+
+      console.log("都道府県名" + e.target.id); //
+
       fetch(
         `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?cityCode=-&prefCode=${e.target.value}`,
         {
           headers: { "X-API-KEY": "ex7wsKgup5vnO3VgsT3htKKSfNRQlrNkxPCrdzhB" },
         }
       )
-        .then((response) => response.json())
+        .then((res) => res.json())
         .then((json) => {
-          console.log(json);
-          setData2(json.result.data[0].data);
           const tmp: number[] = [];
+          const x = json.result.data[0].data;
 
-          for (let i = 0; i < data2.length; i++) {
+          for (let i = 0; i < x.length; i++) {
             //console.log(data2[i]["value"]);
-            tmp.push(data2[i]["value"]);
+            tmp.push(x[i]["value"]);
           }
 
           const select_series: SeriesLineOptions = {
@@ -97,63 +103,17 @@ function App() {
             data: tmp,
           };
           //console.log(select_series);
-          // options.series!.push(select_series);
           //console.log(options);
 
-          // var save = pushJSON.parse(JSON.stringify(save));
-          // save.push(new Date().toString());
-          // save.push(JSON.parse(JSON.stringify(select_series)));
-          setSave([...save, select_series]);
-
-          console.log(save);
-          setOptions((prevState) => ({
-            ...prevState,
-            series: save,
-          }));
+          setDataBoxes([...dataBoxes, select_series]);
+          //console.log(save);
         });
     }
   };
 
-  // const options: Highcharts.Options = {
-  //   title: {
-  //     text: "人口増加率",
-  //   },
-  //   yAxis: {
-  //     title: {
-  //       text: "Value",
-  //     },
-  //   },
-  //   xAxis: {
-  //     accessibility: {
-  //       rangeDescription: "Range: 1980 to 2020",
-  //     },
-  //   },
-  //   legend: {
-  //     layout: "vertical",
-  //     align: "right",
-  //     verticalAlign: "middle",
-  //   },
-  //   plotOptions: {
-  //     series: {
-  //       label: {
-  //         connectorAllowed: false,
-  //       },
-  //       pointInterval: 5,
-  //       pointStart: 1965,
-  //     },
-  //     line: {},
-  //   },
-  //   series: [],
-  // };
-
-  // useEffect(() => {
-  //   // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  //   HighchartsReact;
-
-  // });
   return (
     <div className="App">
-      <h1>{val.join(", ")}</h1>
+      <h1>{select.join(", ")}</h1>
       {data.map((item: any) => (
         <div key={item.prefCode}>
           <label>
@@ -163,16 +123,11 @@ function App() {
               id={item.prefName}
               value={item.prefCode}
               onChange={handleChange}
-              //checked={val.includes(item.prefCode)}
             />
           </label>
         </div>
       ))}
-      <HighchartsReact
-        highcharts={Highcharts}
-        options={opt}
-        // ref={chartComponentRef}
-      />
+      <HighchartsReact highcharts={Highcharts} options={opt} />
     </div>
   );
 }
