@@ -3,11 +3,19 @@ import "./App.css";
 import Highcharts, { SeriesLineOptions } from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
+type pref = {
+  prefCode: number;
+  prefName: string;
+};
+
 function App() {
-  const [data, setData] = useState([]);
+  const APIKEY = process.env.REACT_APP_API_KEY;
+  const [prefecture, setPrefecture] = useState([]);
   const [select, setSelect] = useState(["選択値"]);
-  const [dataBoxes, setDataBoxes] = useState<any>([]);
-  const [opt, setOptions] = useState<Highcharts.Options>({
+  const [seriesBox, setSeriesBox] = useState<Highcharts.SeriesLineOptions[]>(
+    []
+  );
+  const [informations, setInformations] = useState<Highcharts.Options>({
     title: {
       text: "人口増加率",
     },
@@ -39,18 +47,21 @@ function App() {
     series: [],
   });
 
+  //全都道府県名取得
   const getApi = () => {
+    if (APIKEY === undefined) return;
     fetch("https://opendata.resas-portal.go.jp/api/v1/prefectures", {
       method: "GET",
+
       headers: {
-        "X-API-KEY": "ex7wsKgup5vnO3VgsT3htKKSfNRQlrNkxPCrdzhB",
+        "X-API-KEY": APIKEY,
         "Content-Type": "application/json;charset=UTF-8",
       },
     })
       .then((response) => response.json())
       .then((json) => {
         //console.log(json);
-        setData(json.result);
+        setPrefecture(json.result);
       });
   };
 
@@ -59,18 +70,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    setOptions((prevState) => ({
+    setInformations((prevState) => ({
       ...prevState,
-      series: dataBoxes,
+      series: seriesBox,
     }));
-  }, [dataBoxes]);
+  }, [seriesBox]);
 
-  const handleChange = (e: any) => {
+  //チェックボックス操作時処理
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     if (select.includes(e.target.value)) {
-      const result = dataBoxes.filter(
-        (dataBoxes: any) => dataBoxes.name !== e.target.id
+      const result = seriesBox.filter(
+        (dataBox: SeriesLineOptions) => dataBox.name !== e.target.id
       );
-      setDataBoxes(result);
+      setSeriesBox(result);
       console.log(result);
 
       return setSelect(select.filter((item) => item !== e.target.value));
@@ -79,33 +91,33 @@ function App() {
 
       setSelect([...select, e.target.value]);
 
-      console.log("都道府県名" + e.target.id); //
-
+      //console.log("都道府県名" + e.target.id);
+      if (APIKEY === undefined) return;
       fetch(
         `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?cityCode=-&prefCode=${e.target.value}`,
         {
-          headers: { "X-API-KEY": "ex7wsKgup5vnO3VgsT3htKKSfNRQlrNkxPCrdzhB" },
+          headers: { "X-API-KEY": APIKEY },
         }
       )
         .then((res) => res.json())
         .then((json) => {
-          const tmp: number[] = [];
-          const x = json.result.data[0].data;
+          const populationData: number[] = [];
+          const fetchPupoData = json.result.data[0].data;
 
-          for (let i = 0; i < x.length; i++) {
+          for (let i = 0; i < fetchPupoData.length; i++) {
             //console.log(data2[i]["value"]);
-            tmp.push(x[i]["value"]);
+            populationData.push(fetchPupoData[i]["value"]);
           }
 
           const select_series: SeriesLineOptions = {
             type: "line",
             name: e.target.id,
-            data: tmp,
+            data: populationData,
           };
           //console.log(select_series);
           //console.log(options);
 
-          setDataBoxes([...dataBoxes, select_series]);
+          setSeriesBox([...seriesBox, select_series]);
           //console.log(save);
         });
     }
@@ -114,7 +126,7 @@ function App() {
   return (
     <div className="App">
       <h1>{select.join(", ")}</h1>
-      {data.map((item: any) => (
+      {prefecture.map((item: pref) => (
         <div key={item.prefCode}>
           <label>
             {item.prefName}
@@ -127,7 +139,7 @@ function App() {
           </label>
         </div>
       ))}
-      <HighchartsReact highcharts={Highcharts} options={opt} />
+      <HighchartsReact highcharts={Highcharts} options={informations} />
     </div>
   );
 }
