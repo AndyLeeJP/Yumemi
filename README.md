@@ -9,19 +9,20 @@ RESAS API<https://opendata.resas-portal.go.jp>を使用し各都道府県の人�
 
 https://yumemi-8ro1f6pfn-andyleejp.vercel.app/
 
-## 使い方
+## 使用時の注意
 
-1.人口構成を確認したい任意の都道府県のチェックボックスを選択 2.下部に選択した都道府県の人口構成がグラフ化される 3.任意の数指定することができ、チェックを外すとグラフが削除される
+RESAS 様のウェブサイトにて登録していただき API キーを発行する必要があります。
 
-##　環境
+## 環境
 
+- npm 8.19.3
 - typescript 4.9.3
 - React 18.2.0
 - highcharts 10.3.2
 
 ### インストール
 
-- プロジェクト作成(typescript, react 使用)
+- プロジェクト作成(typescript, react 使用)  
   npx create-react-app <プロジェクト名> --template typescript
-- highcharts
+- highcharts  
   npm install -save highcharts-react-official highcharts
